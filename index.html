@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <style>
+        .map_draw {
+            display: block;
+            height: 500px;
+            width: 500px;
+            border: solid 2px bisque;
+        }
+
+        .map_show {
+            display: flex;
+            justify-content: center;
+        }
+
+        #map_box {
+            border: solid 2px black;
+            display: flex;
+            flex-direction: column;
+            overflow-x: auto;
+        }
+
+        .inline_x {
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .inline_y {
+            display: inline-block;
+            margin: 0;
+            padding: 0;
+            width: 9px;
+            height: 5px;
+        }
+    </style>
+    <!-- <canvas id="map" class="map_draw"> -->
+    <div class="map_show">
+        <div id="map_box">
+
+        </div>
+    </div>
+    <div class="map_list">
+        <p>当前地图：<span id="now_map"></span></p>
+        <select class="map_listbox" id="map_listbox"></select>
+    </div>
+    </canvas>
+
+    <script>
+        (async () => {
+            var maps = await fetch('maps.json').then(e => e.json());
+            var update_mapname = (e) => document.getElementById('now_map').innerText = e;
+            var listbox = document.getElementById('map_listbox');
+            maps.map(e => listbox.add(new Option(e.name, e.name)));
+            function make_map(map) {
+                var map_x = map.data[0].length * 9;
+                var map_y = map.data.length * 5;
+                console.log(map, map_x, map_y);
+                var color_list = {
+                    'W': '#1F97DF',//水面
+                    'R': '#177E21',//草
+                    'M': '#8783D5',//墙体
+                    'X': '#EEA10C',//黄色墙体
+                    'Y': '#E88844',//箱子墙体
+                    '.': '#302B4C',//地面
+                    '1': '#E6311F'//玩家生成（?
+                };
+                function randomHexColor() { // 随机生成十六进制颜色
+                    var hex = Math.floor(Math.random() * 16777216).toString(16); // 生成ffffff以内16进制数
+                    while (hex.length < 6) { // 确保长度为6位
+                        hex = '0' + hex;
+                    }
+                    return '#' + hex; // 返回'#'开头的16进制颜色
+                }
+                const getColor = (e) => {
+                    if (!color_list[e]) {
+                        color_list[e] = randomHexColor();
+                    }
+                    return color_list[e];
+                };
+                var map_box = document.getElementById('map_box');
+                map_box.innerHTML = '';
+                map_box.style.minWidth = map_x + 'px';
+                map_box.style.minHeight = map_y + 'px';
+                // var c = document.getElementById("map");
+                // c.style.width = map_x + 'px';
+                // c.style.height = map_y + 'px';
+                // var ctx = c.getContext("2d");
+                // let x = 0, y = 0;
+                map.data.map(e => {
+                    // x = 0;
+                    let temp_div = document.createElement('div');
+                    temp_div.className = 'inline_x';
+                    [...e].map(str => {
+                        //ctx.fillStyle = getColor(str);
+                        //ctx.fillRect(x*10, y, 50, 50);
+                        //  x++;
+                        let span = document.createElement('span');
+                        span.style.background = getColor(str);
+                        // span.style.width = '25px';
+                        //span.style.height = '20px';
+                        span.className = 'inline_y';
+                        temp_div.appendChild(span);
+                    });
+                    map_box.appendChild(temp_div);
+                    //y++;
+                });
+                // console.log(c);
+                console.log(color_list);
+            }
+            function map_update(e) {
+                update_mapname(e);
+                make_map(maps.find(m => m.name == e));
+            }
+            listbox.onchange = (e) => {
+                let v = (e.target.options[e.target.selectedIndex].value);
+                map_update(v);
+            }
+            map_update('Tutorial');
+        })();
+    </script>
+</body>
+
+</html>
